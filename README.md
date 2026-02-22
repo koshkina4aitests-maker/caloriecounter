@@ -17,10 +17,10 @@
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Открыть в браузере `http://127.0.0.1:8000`.
+Открыть в браузере `http://85.209.0.78:8000` (или локально `http://127.0.0.1:8000`).
 
 ## Как пользоваться
 
