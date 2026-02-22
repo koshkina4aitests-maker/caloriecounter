@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="flex flex-col gap-6">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <div class="text-sm text-slate-400">Тренировка</div>
+        <div class="text-xl font-semibold">{{ workout.at.strftime("%Y-%m-%d %H:%M") }}</div>
+        {% if workout.note %}
+          <div class="mt-1 text-sm text-slate-300">{{ workout.note }}</div>
+        {% endif %}
+      </div>
+      <div class="flex items-center gap-3">
+        <a class="text-sm text-indigo-300 hover:text-indigo-200" href="/workouts">← к списку</a>
+      </div>
+    </div>
+
+    <section class="rounded-2xl border border-slate-800 bg-slate-900/30 p-4">
+      <h2 class="text-lg font-semibold">Добавить подход</h2>
+      <form method="post" action="/workouts/{{ workout.id }}/sets" class="mt-4 grid grid-cols-1 md:grid-cols-10 gap-3">
+        <div class="md:col-span-4">
+          <label class="block text-xs text-slate-400">Упражнение</label>
+          <select name="exercise_id" class="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm">
+            {% for e in exercises %}
+              <option value="{{ e.id }}">{{ e.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400">№</label>
+          <input name="set_number" type="number" step="1" min="1" class="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm" value="1" />
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400">Повторы</label>
+          <input name="reps" type="number" step="1" min="0" class="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm" value="8" />
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400">Нагрузка, кг</label>
+          <input name="load_kg" type="number" step="0.5" min="0" class="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm" value="20" />
+        </div>
+        <div class="flex items-end">
+          <button class="w-full rounded-lg bg-emerald-600 hover:bg-emerald-500 px-4 py-2 text-sm font-medium">Добавить</button>
+        </div>
+      </form>
+      <p class="mt-3 text-xs text-slate-400">
+        «Нагрузка» — вес снаряда или дополнительный вес для упражнений с собственным весом.
+      </p>
+    </section>
+
+    <section class="rounded-2xl border border-slate-800 bg-slate-900/30 p-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold">Подходы</h2>
+        <div class="text-sm text-slate-400">Всего: {{ sets|length }}</div>
+      </div>
+      <div class="mt-3 overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="text-left text-slate-400">
+            <tr>
+              <th class="py-2 pr-4">Упражнение</th>
+              <th class="py-2 pr-4">№</th>
+              <th class="py-2 pr-4">Повторы</th>
+              <th class="py-2 pr-4">Нагрузка, кг</th>
+              <th class="py-2 pr-4">e1RM</th>
+              <th class="py-2 pr-2"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800">
+            {% for s in sets %}
+              <tr>
+                <td class="py-2 pr-4 font-medium">{{ s.exercise_name }}</td>
+                <td class="py-2 pr-4">{{ s.set_number }}</td>
+                <td class="py-2 pr-4">{{ s.reps }}</td>
+                <td class="py-2 pr-4">{{ "%.1f"|format(s.load_kg) }}</td>
+                <td class="py-2 pr-4">{{ "%.1f"|format(s.e1rm) }}</td>
+                <td class="py-2 pr-2">
+                  <form method="post" action="/workouts/{{ workout.id }}/sets/{{ s.id }}/delete">
+                    <button class="text-xs text-slate-400 hover:text-red-300">удалить</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="rounded-2xl border border-slate-800 bg-slate-900/30 p-4">
+      <h2 class="text-lg font-semibold">Расход калорий (силовая)</h2>
+      <form method="post" action="/workouts/{{ workout.id }}/energy" class="mt-4 grid grid-cols-1 md:grid-cols-10 gap-3">
+        <div class="md:col-span-3">
+          <label class="block text-xs text-slate-400">Длительность, мин</label>
+          <input name="duration_min" type="number" step="1" min="0" class="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm" value="{{ workout.duration_min or '' }}" />
+        </div>
+        <div class="md:col-span-4">
+          <label class="block text-xs text-slate-400">MET пресет</label>
+          <select name="met_preset" class="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm">
+            <option value="">— не менять —</option>
+            {% for p in met_presets %}
+              {% if p.key.startswith("strength_") %}
+                <option value="{{ p.key }}">{{ p.label }} · MET {{ "%.1f"|format(p.met) }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-xs text-slate-400">MET вручную</label>
+          <input name="met" type="number" step="0.1" min="0" class="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm" value="{{ workout.met or '' }}" placeholder="опционально" />
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400">ккал</label>
+          <input name="calories_burned" type="number" step="1" min="0" class="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm" value="{{ workout.calories_burned or '' }}" placeholder="опционально" />
+        </div>
+        <div class="flex items-end">
+          <button class="w-full rounded-lg bg-indigo-600 hover:bg-indigo-500 px-4 py-2 text-sm font-medium">Сохранить</button>
+        </div>
+      </form>
+      <p class="mt-3 text-xs text-slate-400">
+        Если ккал пустые, при сохранении они будут посчитаны по MET, длительности и весу из настроек.
+      </p>
+    </section>
+  </div>
+{% endblock %}
+

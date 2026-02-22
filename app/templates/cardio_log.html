@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="flex flex-col gap-6">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <div class="text-sm text-slate-400">Кардио</div>
+        <div class="text-xl font-semibold">{{ selected_date }}</div>
+      </div>
+      <form method="get" action="/log/cardio" class="flex items-end gap-3">
+        <div>
+          <label class="block text-xs text-slate-400">Дата</label>
+          <input type="date" name="date" value="{{ selected_date }}" class="mt-1 rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm" />
+        </div>
+        <button class="rounded-lg bg-indigo-600 hover:bg-indigo-500 px-4 py-2 text-sm font-medium">Показать</button>
+      </form>
+    </div>
+
+    <section class="rounded-2xl border border-slate-800 bg-slate-900/30 p-4">
+      <h2 class="text-lg font-semibold">Добавить</h2>
+      <form method="post" action="/log/cardio" class="mt-4 grid grid-cols-1 md:grid-cols-10 gap-3">
+        <input type="hidden" name="date" value="{{ selected_date }}" />
+        <div class="md:col-span-2">
+          <label class="block text-xs text-slate-400">Тип</label>
+          <input name="title" required class="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm" placeholder="Напр. Прогулка" />
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400">Минуты</label>
+          <input name="duration_min" type="number" step="1" min="0" required class="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm" value="30" />
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400">Дистанция, км</label>
+          <input name="distance_km" type="number" step="0.01" min="0" class="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm" placeholder="необязательно" />
+        </div>
+        <div class="md:col-span-3">
+          <label class="block text-xs text-slate-400">MET пресет</label>
+          <select name="met_preset" class="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm">
+            {% for p in met_presets %}
+              <option value="{{ p.key }}">{{ p.label }} · MET {{ "%.1f"|format(p.met) }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400">MET вручную</label>
+          <input name="met" type="number" step="0.1" min="0" class="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm" placeholder="опционально" />
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400">ккал</label>
+          <input name="calories_burned" type="number" step="1" min="0" class="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm" placeholder="опционально" />
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-xs text-slate-400">Время</label>
+          <input name="at" type="datetime-local" value="{{ default_dt }}" class="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm" />
+        </div>
+        <div class="flex items-end">
+          <button class="w-full rounded-lg bg-emerald-600 hover:bg-emerald-500 px-4 py-2 text-sm font-medium">Добавить</button>
+        </div>
+      </form>
+      <p class="mt-3 text-xs text-slate-400">
+        Если ккал не указаны вручную, они считаются по MET и весу из настроек.
+      </p>
+    </section>
+
+    <section class="rounded-2xl border border-slate-800 bg-slate-900/30 p-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold">Записи</h2>
+        <div class="text-sm text-slate-400">Итого: {{ totals.burned_kcal }} ккал</div>
+      </div>
+      <div class="mt-3 space-y-2">
+        {% if entries %}
+          {% for c in entries %}
+            <div class="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/40 px-3 py-2">
+              <div class="min-w-0">
+                <div class="truncate font-medium">{{ c.title }}</div>
+                <div class="text-xs text-slate-400">
+                  {{ c.at.strftime("%H:%M") }} · {{ "%.0f"|format(c.duration_min) }} мин{% if c.distance_km is not none %} · {{ "%.2f"|format(c.distance_km) }} км{% endif %}{% if c.met is not none %} · MET {{ "%.1f"|format(c.met) }}{% endif %}
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="text-sm font-semibold">{{ c.calories_burned }} ккал</div>
+                <form method="post" action="/log/cardio/{{ c.id }}/delete">
+                  <input type="hidden" name="date" value="{{ selected_date }}" />
+                  <input type="hidden" name="next" value="/log/cardio" />
+                  <button class="text-xs text-slate-400 hover:text-red-300">удалить</button>
+                </form>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="text-sm text-slate-400">Пока нет записей.</div>
+        {% endif %}
+      </div>
+    </section>
+  </div>
+{% endblock %}
+

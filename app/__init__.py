@@ -1,0 +1,2 @@
+"""LifeTracker app package."""
+

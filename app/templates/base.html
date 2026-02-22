@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ title or "LifeTracker" }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: { sans: ["ui-sans-serif", "system-ui", "Segoe UI", "Roboto", "Helvetica", "Arial"] }
+          }
+        }
+      };
+    </script>
+  </head>
+  <body class="bg-slate-950 text-slate-100">
+    <div class="min-h-screen">
+      <header class="border-b border-slate-800 bg-slate-950/60 backdrop-blur">
+        <div class="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <a href="/" class="text-lg font-semibold tracking-tight">LifeTracker</a>
+            <span class="text-xs text-slate-400">калории · БЖУ · тренировки</span>
+          </div>
+          <nav class="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+            <a class="hover:text-white text-slate-200" href="/">Дашборд</a>
+            <a class="hover:text-white text-slate-200" href="/log/food">Еда</a>
+            <a class="hover:text-white text-slate-200" href="/log/cardio">Кардио</a>
+            <a class="hover:text-white text-slate-200" href="/workouts">Силовые</a>
+            <a class="hover:text-white text-slate-200" href="/progress">Прогресс</a>
+            <a class="hover:text-white text-slate-200" href="/foods">Продукты</a>
+            <a class="hover:text-white text-slate-200" href="/exercises">Упражнения</a>
+            <a class="hover:text-white text-slate-200" href="/settings">Настройки</a>
+            <a class="hover:text-white text-slate-200" href="/calculator">Калькулятор БЖУ</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="mx-auto max-w-6xl px-4 py-6">
+        {% if flash %}
+          <div class="mb-4 rounded-lg border border-emerald-800 bg-emerald-950 px-4 py-3 text-emerald-200">
+            {{ flash }}
+          </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </body>
+</html>
+
