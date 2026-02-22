@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="flex flex-col gap-6">
+    <section class="rounded-2xl border border-slate-800 bg-slate-900/30 p-4">
+      <div class="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div class="text-sm text-slate-400">Прогресс</div>
+          <div class="text-xl font-semibold">{{ exercise.name }}</div>
+          <div class="mt-1 text-sm text-slate-400">
+            e1RM считается по формуле Epley: \(1RM = w \cdot (1 + reps/30)\)
+          </div>
+        </div>
+        <a class="text-sm text-indigo-300 hover:text-indigo-200" href="/progress">← все упражнения</a>
+      </div>
+    </section>
+
+    <section class="rounded-2xl border border-slate-800 bg-slate-900/30 p-4">
+      <h2 class="text-lg font-semibold">График e1RM по лучшему подходу в тренировке</h2>
+      <div class="mt-3">
+        <canvas id="e1rmChart" height="120"></canvas>
+      </div>
+    </section>
+
+    <section class="rounded-2xl border border-slate-800 bg-slate-900/30 p-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold">История</h2>
+        <div class="text-sm text-slate-400">{{ points|length }} тренировок</div>
+      </div>
+      <div class="mt-3 overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="text-left text-slate-400">
+            <tr>
+              <th class="py-2 pr-4">Дата</th>
+              <th class="py-2 pr-4">Лучший подход</th>
+              <th class="py-2 pr-4">e1RM</th>
+              <th class="py-2 pr-2">Тренировка</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800">
+            {% for p in points %}
+              <tr>
+                <td class="py-2 pr-4">{{ p.date }}</td>
+                <td class="py-2 pr-4">{{ "%.1f"|format(p.load_kg) }}×{{ p.reps }}</td>
+                <td class="py-2 pr-4">{{ "%.1f"|format(p.e1rm) }}</td>
+                <td class="py-2 pr-2">
+                  <a class="text-indigo-300 hover:text-indigo-200" href="/workouts/{{ p.workout_id }}">открыть</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script>
+    const labels = {{ chart.labels | tojson }};
+    const data = {{ chart.data | tojson }};
+
+    const ctx = document.getElementById('e1rmChart');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'e1RM, кг',
+          data,
+          borderColor: 'rgba(129, 140, 248, 1)',
+          backgroundColor: 'rgba(129, 140, 248, 0.2)',
+          tension: 0.25,
+          fill: true,
+          pointRadius: 3,
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: { ticks: { color: 'rgba(148, 163, 184, 1)' }, grid: { color: 'rgba(30, 41, 59, 1)' } },
+          y: { ticks: { color: 'rgba(148, 163, 184, 1)' }, grid: { color: 'rgba(30, 41, 59, 1)' } }
+        },
+        plugins: {
+          legend: { labels: { color: 'rgba(226, 232, 240, 1)' } }
+        }
+      }
+    });
+  </script>
+{% endblock %}
+

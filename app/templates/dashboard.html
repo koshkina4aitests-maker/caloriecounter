@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% from "_components.html" import card %}
+
+{% block content %}
+  <div class="flex flex-col gap-4">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <div class="text-sm text-slate-400">Выбранная дата</div>
+        <div class="text-xl font-semibold">{{ selected_date }}</div>
+      </div>
+
+      <form method="get" action="/" class="flex items-end gap-3">
+        <div>
+          <label class="block text-xs text-slate-400">Дата</label>
+          <input type="date" name="date" value="{{ selected_date }}" class="mt-1 rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm" />
+        </div>
+        <button class="rounded-lg bg-indigo-600 hover:bg-indigo-500 px-4 py-2 text-sm font-medium">Показать</button>
+      </form>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {{ card("Потреблено", totals.intake_kcal ~ " ккал", totals.intake_macros) }}
+      {{ card("Сожжено", totals.burned_kcal ~ " ккал", totals.burned_details) }}
+      {{ card("Баланс", totals.net_kcal ~ " ккал", "потреблено − сожжено") }}
+      {{ card("Вес (для MET)", settings.body_weight_kg ~ " кг", "можно изменить в настройках") }}
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-2">
+      <section class="rounded-2xl border border-slate-800 bg-slate-900/30 p-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-semibold">Еда за день</h2>
+          <a href="/log/food?date={{ selected_date }}" class="text-sm text-indigo-300 hover:text-indigo-200">добавить/посмотреть →</a>
+        </div>
+        <div class="mt-3 space-y-2">
+          {% if food_entries %}
+            {% for e in food_entries %}
+              <div class="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/40 px-3 py-2">
+                <div class="min-w-0">
+                  <div class="truncate font-medium">{{ e.name }}</div>
+                  <div class="text-xs text-slate-400">
+                    {{ e.at.strftime("%H:%M") }} · {{ "%.0f"|format(e.grams) }} г · Б {{ "%.1f"|format(e.protein_g) }} / Ж {{ "%.1f"|format(e.fat_g) }} / У {{ "%.1f"|format(e.carbs_g) }}
+                  </div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <div class="text-sm font-semibold">{{ e.kcal }} ккал</div>
+                  <form method="post" action="/log/food/{{ e.id }}/delete">
+                    <input type="hidden" name="date" value="{{ selected_date }}" />
+                    <input type="hidden" name="next" value="/" />
+                    <button class="text-xs text-slate-400 hover:text-red-300">удалить</button>
+                  </form>
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="text-sm text-slate-400">Пока нет записей.</div>
+          {% endif %}
+        </div>
+      </section>
+
+      <section class="rounded-2xl border border-slate-800 bg-slate-900/30 p-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-semibold">Нагрузка за день</h2>
+          <div class="flex items-center gap-4 text-sm">
+            <a href="/log/cardio?date={{ selected_date }}" class="text-indigo-300 hover:text-indigo-200">кардио →</a>
+            <a href="/workouts?date={{ selected_date }}" class="text-indigo-300 hover:text-indigo-200">силовые →</a>
+          </div>
+        </div>
+
+        <div class="mt-3 space-y-3">
+          <div>
+            <div class="text-xs uppercase tracking-wider text-slate-400">Кардио</div>
+            <div class="mt-2 space-y-2">
+              {% if cardio_entries %}
+                {% for c in cardio_entries %}
+                  <div class="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/40 px-3 py-2">
+                    <div class="min-w-0">
+                      <div class="truncate font-medium">{{ c.title }}</div>
+                      <div class="text-xs text-slate-400">
+                        {{ c.at.strftime("%H:%M") }} · {{ "%.0f"|format(c.duration_min) }} мин{% if c.distance_km is not none %} · {{ "%.2f"|format(c.distance_km) }} км{% endif %}{% if c.met is not none %} · MET {{ "%.1f"|format(c.met) }}{% endif %}
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                      <div class="text-sm font-semibold">{{ c.calories_burned }} ккал</div>
+                      <form method="post" action="/log/cardio/{{ c.id }}/delete">
+                        <input type="hidden" name="date" value="{{ selected_date }}" />
+                        <input type="hidden" name="next" value="/" />
+                        <button class="text-xs text-slate-400 hover:text-red-300">удалить</button>
+                      </form>
+                    </div>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <div class="text-sm text-slate-400">Пока нет записей.</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div>
+            <div class="text-xs uppercase tracking-wider text-slate-400">Силовые</div>
+            <div class="mt-2 space-y-2">
+              {% if strength_workouts %}
+                {% for w in strength_workouts %}
+                  <div class="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/40 px-3 py-2">
+                    <div class="min-w-0">
+                      <a class="truncate font-medium hover:text-indigo-200" href="/workouts/{{ w.id }}">{{ w.at.strftime("%H:%M") }} · тренировка</a>
+                      <div class="text-xs text-slate-400">
+                        {% if w.duration_min is not none %}{{ "%.0f"|format(w.duration_min) }} мин{% endif %}
+                        {% if w.calories_burned is not none %} · {{ w.calories_burned }} ккал{% endif %}
+                        {% if w.note %} · {{ w.note }}{% endif %}
+                      </div>
+                    </div>
+                    <form method="post" action="/workouts/{{ w.id }}/delete">
+                      <input type="hidden" name="date" value="{{ selected_date }}" />
+                      <input type="hidden" name="next" value="/" />
+                      <button class="text-xs text-slate-400 hover:text-red-300">удалить</button>
+                    </form>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <div class="text-sm text-slate-400">Пока нет тренировок.</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+{% endblock %}
+

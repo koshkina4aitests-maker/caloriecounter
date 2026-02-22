@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="flex flex-col gap-6">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <div class="text-sm text-slate-400">Силовые тренировки</div>
+        <div class="text-xl font-semibold">{{ selected_date }}</div>
+      </div>
+      <form method="get" action="/workouts" class="flex items-end gap-3">
+        <div>
+          <label class="block text-xs text-slate-400">Дата</label>
+          <input type="date" name="date" value="{{ selected_date }}" class="mt-1 rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm" />
+        </div>
+        <button class="rounded-lg bg-indigo-600 hover:bg-indigo-500 px-4 py-2 text-sm font-medium">Показать</button>
+      </form>
+    </div>
+
+    <section class="rounded-2xl border border-slate-800 bg-slate-900/30 p-4">
+      <h2 class="text-lg font-semibold">Создать тренировку</h2>
+      <form method="post" action="/workouts" class="mt-4 grid grid-cols-1 md:grid-cols-8 gap-3">
+        <input type="hidden" name="date" value="{{ selected_date }}" />
+        <div class="md:col-span-3">
+          <label class="block text-xs text-slate-400">Время</label>
+          <input name="at" type="datetime-local" value="{{ default_dt }}" class="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm" />
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-xs text-slate-400">Длительность, мин</label>
+          <input name="duration_min" type="number" step="1" min="0" class="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm" placeholder="опционально" />
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-xs text-slate-400">ккал</label>
+          <input name="calories_burned" type="number" step="1" min="0" class="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm" placeholder="опционально" />
+        </div>
+        <div class="flex items-end">
+          <button class="w-full rounded-lg bg-emerald-600 hover:bg-emerald-500 px-4 py-2 text-sm font-medium">Создать</button>
+        </div>
+        <div class="md:col-span-8">
+          <label class="block text-xs text-slate-400">Заметка</label>
+          <input name="note" class="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm" placeholder="необязательно" />
+        </div>
+      </form>
+      <p class="mt-3 text-xs text-slate-400">
+        Если ккал не указаны, можно оставить пустым или посчитать через MET на странице тренировки.
+      </p>
+    </section>
+
+    <section class="rounded-2xl border border-slate-800 bg-slate-900/30 p-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold">Список</h2>
+        <div class="text-sm text-slate-400">{{ workouts|length }} шт.</div>
+      </div>
+      <div class="mt-3 space-y-2">
+        {% if workouts %}
+          {% for w in workouts %}
+            <div class="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/40 px-3 py-2">
+              <div class="min-w-0">
+                <a class="truncate font-medium hover:text-indigo-200" href="/workouts/{{ w.id }}">{{ w.at.strftime("%H:%M") }} · тренировка</a>
+                <div class="text-xs text-slate-400">
+                  {% if w.duration_min is not none %}{{ "%.0f"|format(w.duration_min) }} мин{% endif %}
+                  {% if w.calories_burned is not none %} · {{ w.calories_burned }} ккал{% endif %}
+                  {% if w.note %} · {{ w.note }}{% endif %}
+                </div>
+              </div>
+              <form method="post" action="/workouts/{{ w.id }}/delete">
+                <input type="hidden" name="date" value="{{ selected_date }}" />
+                <input type="hidden" name="next" value="/workouts" />
+                <button class="text-xs text-slate-400 hover:text-red-300">удалить</button>
+              </form>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="text-sm text-slate-400">Пока нет тренировок.</div>
+        {% endif %}
+      </div>
+    </section>
+  </div>
+{% endblock %}
+
