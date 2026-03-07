@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from datetime import datetime
 
 from sqlmodel import Field, Relationship, SQLModel
@@ -40,7 +38,7 @@ class Exercise(SQLModel, table=True):
     category: str = Field(default="strength", max_length=50)  # strength | bodyweight | cardio
     muscle_group: str = Field(default="", max_length=100)
 
-    sets: list[StrengthSet] = Relationship(back_populates="exercise")
+    sets: list["StrengthSet"] = Relationship(back_populates="exercise")
 
 
 class StrengthWorkout(SQLModel, table=True):
@@ -52,7 +50,7 @@ class StrengthWorkout(SQLModel, table=True):
     calories_burned: int | None = Field(default=None, ge=0, le=20000)
     met: float | None = Field(default=None, ge=0.0, le=30.0)
 
-    sets: list[StrengthSet] = Relationship(back_populates="workout")
+    sets: list["StrengthSet"] = Relationship(back_populates="workout")
 
 
 class StrengthSet(SQLModel, table=True):
